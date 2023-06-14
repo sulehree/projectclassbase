@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import NewsItem from './NewsItem'
 import Spinner from './Spinner';
+import CountryName from './CountryName'
 
 
 export class News extends Component {
@@ -115,18 +116,17 @@ export class News extends Component {
 
     constructor() {
         super();
-
-
         this.state = {
             // articles: this.articles,
             articles: [],
             loading: false,
-            page: 1
+            page: 1,
+            errorMessage:""
         }
 
     }
     async componentDidMount() {
-        let url = `https://newsapi.org/v2/top-headlines?country=us&category=technology&apiKey=64c969a073c94603bb4efc9e179b071e&page=1&pageSize=${this.props.pageSize}`
+        let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=64c969a073c94603bb4efc9e179b071e&page=1&pageSize=${this.props.pageSize}`
         this.setState({ loading: true })
 
         console.log(this.state.loading);
@@ -136,15 +136,18 @@ export class News extends Component {
         this.results = parsedata.totalResults;
         this.TotalPages = this.results / this.props.pageSize;
 
+
+
         this.setState({
             articles: parsedata.articles,
-            loading: false
+            loading: false,
+            errorMessage:parsedata.message
         });
-
+        console.log(this.state.loading);
     }
 
     handleNextClick = async () => {
-        let url = `https://newsapi.org/v2/top-headlines?country=us&category=technology&apiKey=64c969a073c94603bb4efc9e179b071e&page=${this.state.page + 1}&pageSize=${this.props.pageSize}`
+        let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=64c969a073c94603bb4efc9e179b071e&page=${this.state.page + 1}&pageSize=${this.props.pageSize}`
 
         let data = await fetch(url);
         let parsedata = await data.json();
@@ -160,7 +163,7 @@ export class News extends Component {
 
     }
     handlePrevClick = async () => {
-        let url = `https://newsapi.org/v2/top-headlines?country=us&category=technology&apiKey=64c969a073c94603bb4efc9e179b071e&page=${this.state.page - 1}&pageSize=${this.props.pageSize}`
+        let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=64c969a073c94603bb4efc9e179b071e&page=${this.state.page - 1}&pageSize=${this.props.pageSize}`
         this.setState({ loading: true })
 
         let data = await fetch(url);
@@ -171,6 +174,7 @@ export class News extends Component {
                 page: this.state.page - 1,
                 articles: parsedata.articles,
                 loading: false
+                
             }
 
         )
@@ -184,27 +188,26 @@ export class News extends Component {
                 <div className="container my-3">
 
                     <div className="row">
-                        <h2 className="text-center"><strong>Daily Akhbar:</strong>Todays Top US  Technology HeadLines</h2>
+
+                        <h2 className="text-center"><strong>Daily Akhbar:</strong>Todays Top <CountryName code={this.props.country} /> : {this.props.category.toUpperCase()} HeadLines</h2>
                         {/* {!this.state.loading && <  Spinner />} */}
                         {/* above component will only be shown when this.state.loading will be true */}
                         {
-
-                            this.state.articles?.length > 0 ? (
-
+                            !this.state.loading && this.state.articles?.length > 0 ? (
 
                                 this.state.articles?.map((element) => {
 
-                                    <h2 className="text-center"><strong>Daily Akhbar:</strong>Todays Top US  Technology HeadLines</h2>
+                                    <h2 className="text-center"><strong>Daily Akhbar:</strong>Todays Top US  Technology headlines</h2>
                                     return <div className="col-md-4 my-2" key={element.url}>
                                         <NewsItem title={element.title} authorName={element.author}
                                             imageUrl={element.urlToImage} description={element.description} newsUrl={element.url} PDate={element.publishedAt} />
                                     </div>
 
-
                                 })
                             ) : (
                                 <div >
                                     {this.state.loading && <  Spinner />}
+                                    <h2>{this.state.errorMessage}</h2>
                                 </div>
                             )
                         }
@@ -218,7 +221,7 @@ export class News extends Component {
 
                         <button disabled={this.state.page <= 1} type="button" className="btn btn-dark" onClick={this.handlePrevClick}>  &larr; Previous</button>
 
-                        <button type="button" className="btn btn-dark" onClick={this.handleNextClick}>&larr;{this.state.page} of {Math.ceil(this.TotalPages)}    &rarr;</button>
+                        <button type="button" className="btn btn-dark" onClick={this.handleNextClick}>&larr;{this.state.page} of {Math.ceil(this.TotalPages)||"(nth)"}  &rarr;</button>
 
                         <button disabled={this.state.page >= this.TotalPages} type="button" className="btn btn-dark" onClick={this.handleNextClick}>Next &rarr;</button>
 

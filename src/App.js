@@ -4,15 +4,17 @@ import News from './components/News';
 
 export default class App extends Component {
 
-  c="Abbas";
+  c = "Abbas";
 
   render() {
 
     return (
       <div>
-      <NavBar/>
-      <div className="container"><News pageSize="18"/></div>
-      
+        <NavBar />
+        <div className="container">
+        <News pageSize="12" country="US" category="technology" />
+        </div>
+
       </div>
     )
 
