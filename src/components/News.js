@@ -121,11 +121,12 @@ export class News extends Component {
             articles: [],
             loading: false,
             page: 1,
-            errorMessage:""
+            errorMessage: ""
         }
 
     }
     async componentDidMount() {
+        console.log("MOUNTED")
         let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=64c969a073c94603bb4efc9e179b071e&page=1&pageSize=${this.props.pageSize}`
         this.setState({ loading: true })
 
@@ -141,12 +142,13 @@ export class News extends Component {
         this.setState({
             articles: parsedata.articles,
             loading: false,
-            errorMessage:parsedata.message
+            errorMessage: parsedata.message
         });
         console.log(this.state.loading);
     }
 
     handleNextClick = async () => {
+        console.log("NEXT")
         let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=64c969a073c94603bb4efc9e179b071e&page=${this.state.page + 1}&pageSize=${this.props.pageSize}`
 
         let data = await fetch(url);
@@ -174,7 +176,7 @@ export class News extends Component {
                 page: this.state.page - 1,
                 articles: parsedata.articles,
                 loading: false
-                
+
             }
 
         )
@@ -197,7 +199,6 @@ export class News extends Component {
 
                                 this.state.articles?.map((element) => {
 
-                                    <h2 className="text-center"><strong>Daily Akhbar:</strong>Todays Top US  Technology headlines</h2>
                                     return <div className="col-md-4 my-2" key={element.url}>
                                         <NewsItem title={element.title} authorName={element.author}
                                             imageUrl={element.urlToImage} description={element.description} newsUrl={element.url} PDate={element.publishedAt} />
@@ -221,7 +222,7 @@ export class News extends Component {
 
                         <button disabled={this.state.page <= 1} type="button" className="btn btn-dark" onClick={this.handlePrevClick}>  &larr; Previous</button>
 
-                        <button type="button" className="btn btn-dark" onClick={this.handleNextClick}>&larr;{this.state.page} of {Math.ceil(this.TotalPages)||"(nth)"}  &rarr;</button>
+                        <button type="button" className="btn btn-dark" onClick={this.handleNextClick}>&larr;{this.state.page} of {Math.ceil(this.TotalPages) || "(nth)"}  &rarr;</button>
 
                         <button disabled={this.state.page >= this.TotalPages} type="button" className="btn btn-dark" onClick={this.handleNextClick}>Next &rarr;</button>
 
