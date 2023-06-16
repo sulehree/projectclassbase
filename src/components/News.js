@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import NewsItem from './NewsItem'
 import Spinner from './Spinner';
 import CountryName from './CountryName'
-
+import InfiniteScroll from "react-infinite-scroll-component";
 
 export class News extends Component {
     // articles = [
@@ -117,31 +117,33 @@ export class News extends Component {
     constructor(props) {
         super();
 
-        document.title=this.capitalizeFirstLetter(props.category)+" :Daily Akhbar";
+        document.title = this.capitalizeFirstLetter(props.category) + " :Daily Akhbar";
 
         this.state = {
             // articles: this.articles,
             articles: [],
-            loading: false,
+            loading: true,
             page: 1,
-            errorMessage: ""
+            errorMessage: "",
+            totalResults: 0
         }
 
     }
- 
-     capitalizeFirstLetter(string) {
+
+    capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
 
-     async UpDateNewsData(){
-        console.log(this.state.page)
-        let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=64c969a073c94603bb4efc9e179b071e&page=${this.state.page}&pageSize=${this.props.pageSize}`
+
+    async UpDateNewsData() {
+
+        let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.props.ApiKey}&page=${this.state.page}&pageSize=${this.props.pageSize}`
         this.setState({ loading: true })
         let data = await fetch(url);
         let parsedata = await data.json();
-        this.results = parsedata.totalResults;
-        this.TotalPages =Math.ceil(this.results / this.props.pageSize)
+        this.totalResults = parsedata.totalResults;
+        this.TotalPages = Math.ceil(this.totalResults / this.props.pageSize)
         this.setState({
             articles: parsedata.articles,
             loading: false,
@@ -150,60 +152,99 @@ export class News extends Component {
         console.log(this.state.page)
     }
 
-     componentDidMount() {
 
-       this.UpDateNewsData();
-        
-        
+
+    fetchMoreData = async () => {
+
+        this.setState({ page: this.state.page + 1 })
+        let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.props.ApiKey}&page=${this.state.page}&pageSize=${this.props.pageSize}`
+        // this.setState({ loading: true })
+        let data = await fetch(url);
+        let parsedata = await data.json();
+        this.totalResults = parsedata.totalResults;
+        this.TotalPages = Math.ceil(this.totalResults / this.props.pageSize)
+        this.setState({
+            articles: this.state.articles.concat(parsedata.articles),
+            loading: false,
+            errorMessage: parsedata.message
+        });
+
+
+
+        // a fake async api call like which sends
+        // 20 more records in 1.5 secs
+        // setTimeout(() => {
+        //     this.setState({
+        //         items: this.state.items.concat(Array.from({ length: 20 }))
+        //     });
+        // }, 1500);
     }
 
-    handleNextClick = async () => {
-       this.setState({page: this.state.page + 1})
-       this.UpDateNewsData();
-    }
-    handlePrevClick = async () => {
-        
-        this.setState({page: this.state.page - 1})
-        this.UpDateNewsData();     
+
+    componentDidMount() {
+
+        this.UpDateNewsData();
+
 
     }
+    // as we have implemented the infinite scroll so we do not need the functions that are associated with buttong (next and previous)
+    // handleNextClick = async () => {
+    //     this.setState({ page: this.state.page + 1 })
+    //     this.UpDateNewsData();
+    // }
+    // handlePrevClick = async () => {
+
+    //     this.setState({ page: this.state.page - 1 })
+    //     this.UpDateNewsData();
+
+    // }
 
     render() {
 
         return (
             <>
-                <div className="container my-3">
+                <div className=" my-3">
+                    <h2 className="text-center "><strong>Daily Akhbar:</strong>Top HeadLines in <CountryName code={this.props.country} /> on {this.props.category.toUpperCase()} </h2>
+                    {this.state.loading && <Spinner />}
 
-                    <div className="row">
 
-                        <h2 className="text-center"><strong>Daily Akhbar:</strong>Top HeadLines in <CountryName code={this.props.country} /> on {this.props.category.toUpperCase()} </h2>
-                        {/* {!this.state.loading && <  Spinner />} */}
-                        {/* above component will only be shown when this.state.loading will be true */}
-                        {
-                            !this.state.loading && this.state.articles?.length > 0 ? (
+                    {/* Adding infnite Scroll */}
 
-                                this.state.articles?.map((element) => {
+                    <InfiniteScroll
+                        dataLength={this.state.articles?.length}
+                        next={this.fetchMoreData}
+                        hasMore={this.state.articles.length !== this.state.totalResults} // it should have true for scrolling. and we will have true values till our length will not equal
+                        loader={< Spinner />}
+                    >
 
-                                    return <div className="col-md-4 my-2" key={element.url}>
-                                        <NewsItem title={element.title} authorName={element.author}
-                                            imageUrl={element.urlToImage} description={element.description} newsUrl={element.url} PDate={element.publishedAt} newsSource={element.source.name} />
+
+
+
+                        <div className="container">
+                            <div className=" row">
+
+                                {/* {!this.state.loading && <  Spinner />} */}
+                                {/* above component will only be shown when this.state.loading will be true */}
+                                {!this.state.loading && this.state.articles?.length > 0 ? (
+                                    this.state.articles?.map((element) => {
+                                        return <div className="col-md-4 my-3" key={element.url}>
+                                            <NewsItem title={element.title} authorName={element.author}
+                                                imageUrl={element.urlToImage} description={element.description} newsUrl={element.url} PDate={element.publishedAt} newsSource={element.source.name} />
+                                        </div>
+                                    })
+                                ) : (
+                                    <div >
+                                        {/* {this.state.loading && <  Spinner />} */}
+                                        <p>{this.state.errorMessage}</p>
+
                                     </div>
-
-                                })
-                            ) : (
-                                <div >
-                                    {this.state.loading && <  Spinner />}
-                                    <h2>{this.state.errorMessage}</h2>
-                                </div>
-                            )
-                        }
-
-
-
-
-                    </div>
-
-                    <div className="container d-flex justify-content-between">
+                                )
+                                }
+                            </div>
+                        </div>
+                    </InfiniteScroll>
+                    {/* End of infinite Scroll */}
+                    {/* <div className="container d-flex justify-content-between">
 
                         <button disabled={this.state.page <= 1} type="button" className="btn btn-dark" onClick={this.handlePrevClick}>  &larr; Previous</button>
 
@@ -212,7 +253,8 @@ export class News extends Component {
                         <button disabled={this.state.page >= this.TotalPages} type="button" className="btn btn-dark" onClick={this.handleNextClick}>Next &rarr;</button>
 
 
-                    </div>
+                    </div> */}
+                    {/* As we have added the infinite scroll in it.. so we will disable the buttons */}
 
 
 
